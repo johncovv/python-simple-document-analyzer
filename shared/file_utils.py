@@ -1,15 +1,15 @@
 import fitz
 
 
-def convert_pdf_pages_to_images_bytes(pdf_path: str, zoom: float = 2.0) -> bytearray:
+def convert_pdf_pages_to_images_bytes(pdf_bytes: bytes, zoom: float = 2.0) -> bytearray:
     """
     Convert a specific page of a PDF document to a PNG image.
 
-    :param pdf_path: Path to the PDF document.
+    :param pdf_bytes: PDF document data in bytes.
     :param zoom: Zoom factor for the image quality.
     :return: PNG image bytes.
     """
-    pdf_document = fitz.open(pdf_path)
+    pdf_document = fitz.open("pdf", pdf_bytes)
     pdf_pages_count = pdf_document.page_count
 
     png_images = bytearray()

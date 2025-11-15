@@ -4,6 +4,10 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     environment: str = "development"
 
+    # Azure Storage settings
+    storage_connection_string: str = ""
+    storage_container_name: str = ""
+
     # Azure OpenAI settings
     azure_openai_api_key: str = ""
     azure_openai_endpoint: str = ""

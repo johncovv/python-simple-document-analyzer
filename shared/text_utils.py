@@ -6,7 +6,7 @@ from shared.date_utils import DateUtils
 from core import settings
 
 
-def analyze_pdf_text(full_text):
+def analyze_pdf_text(full_text: str):
     """
     Analyze text extracted from a PDF document using Azure OpenAI.
 
