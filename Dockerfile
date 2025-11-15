@@ -1,10 +1,9 @@
-# Use Python 3.13 slim image for smaller size
-FROM python:3.13-slim
+# ==============================================================================
+# BUILDER STAGE: Install dependencies and build packages
+# ==============================================================================
+FROM python:3.13-slim AS builder
 
-# Set working directory
-WORKDIR /app
-
-# Install system dependencies for WeasyPrint and other packages
+# Install build dependencies (only needed for compilation)
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -14,27 +13,56 @@ RUN apt-get update && apt-get install -y \
     libcairo2-dev \
     libpango1.0-dev \
     libgdk-pixbuf-xlib-2.0-dev \
-    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Install Poetry (temporarily for dependency installation)
+RUN pip install --no-cache-dir poetry
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock* ./
+
+# Install Python dependencies and clean up
+RUN poetry config virtualenvs.create false \
+    && poetry install --only=main --no-interaction --no-ansi --no-root \
+    && pip uninstall -y poetry \
+    && pip cache purge \
+    && rm -rf /root/.cache
+
+# ==============================================================================
+# PRODUCTION STAGE: Lightweight runtime image
+# ==============================================================================
+FROM python:3.13-slim
+
+# Install only runtime dependencies (no build tools)
+RUN apt-get update && apt-get install -y \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libgdk-pixbuf-2.0-0 \
     shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-RUN pip install poetry
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash app
 
-# Configure Poetry: Don't create virtual env (we're in container)
-RUN poetry config virtualenvs.create false
+# Set working directory
+WORKDIR /app
 
-# Copy Poetry files
-COPY pyproject.toml poetry.lock* ./
-
-# Install dependencies (without dev dependencies)
-RUN poetry install --only=main --no-interaction --no-ansi --no-root
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY . .
+COPY --chown=app:app . .
 
 # Create necessary directories
-RUN mkdir -p temp/analysis
+RUN mkdir -p temp/analysis && chown -R app:app temp/
+
+# Switch to non-root user
+USER app
 
 # Set Python path
 ENV PYTHONPATH=/app
@@ -42,9 +70,9 @@ ENV PYTHONPATH=/app
 # Set unbuffered output for better logging
 ENV PYTHONUNBUFFERED=1
 
-# Health check - Verify Azure services configuration
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import sys; sys.exit(0)"
 
 # Default command
-CMD ["poetry", "run", "python", "main.py"]
+CMD ["python", "main.py"]
