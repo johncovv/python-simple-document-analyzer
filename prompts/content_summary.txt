@@ -1,3 +1,0 @@
-Analyze the following text extracted from a PDF document and provide a summary of its key points in Markdown format.
-Format the summary with appropriate headings and bullet points for clarity, using Markdown syntax.
-The summary should be concise yet comprehensive, capturing all essential information presented in the text.

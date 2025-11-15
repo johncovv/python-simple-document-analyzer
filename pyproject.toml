@@ -1,5 +1,5 @@
 [project]
-name = "worker-test"
+name = "document-analyzer"
 version = "0.1.0"
 description = ""
 authors = [{ name = "John Covv", email = "contato@johncovv.com" }]

@@ -1,0 +1,13 @@
+Analyze the following text extracted from a PDF document and provide a comprehensive summary of its key points.
+
+Format your response ONLY in pure Markdown syntax without code blocks. Do NOT wrap your response in ```markdown``` or any other code block markers.
+
+Your response should include:
+- Clear headings and subheadings using # and ##
+- Bullet points and numbered lists where appropriate
+- Bold text for emphasis using **text**
+- Proper paragraph spacing
+
+The summary should be concise yet comprehensive, capturing all essential information presented in the text. The output will be converted directly to a PDF file, so ensure the Markdown is clean and properly formatted.
+
+Respond with pure Markdown content only.

@@ -1,23 +1,31 @@
 from azure.storage.blob import BlobServiceClient
+import asyncio
 
 from shared.file_utils import convert_pdf_pages_to_images_bytes
 from shared.vision_utils import extract_text_from_image_bytes
 from shared.pdf_utils import PdfConfig, save_markdown_as_pdf
-from shared.text_utils import analyze_pdf_text
+from shared.text_utils import process_text_for_insights
 from core.settings import settings
 
 
-async def execute_pdf_analysis(blob_data: bytes, blob_name: str) -> str | None:
+async def execute_pdf_analysis(blob_bytes: bytes, blob_name: str) -> str | None:
     print("🛠️ Starting PDF processing and analysis workflow...")
 
     # PDF Document Conversion
-    image_bytes = convert_pdf_pages_to_images_bytes(blob_data)
+    image_bytes = convert_pdf_pages_to_images_bytes(blob_bytes)
 
     # Azure Vision
-    full_text = extract_text_from_image_bytes(image_bytes)
+    all_extracted_texts = []
+    for image_byte in image_bytes:
+        ocr_text = extract_text_from_image_bytes(image_byte)
+        all_extracted_texts.append(ocr_text)
+
+    pdf_ocr_output = "\n".join(all_extracted_texts)
 
     # LLM
-    extracted_insights_as_markdown = analyze_pdf_text(full_text)
+    extracted_insights_as_markdown = process_text_for_insights(
+        pdf_ocr_output, "text_summary"
+    )
 
     # Create PDF with results - Convert Markdown to PDF with full formatting
 
@@ -69,10 +77,9 @@ async def register_listener():
                 blob_data = blob_client.download_blob().readall()
 
                 print(f"⬇️ Blob {blob.name} downloaded, size: {len(blob_data)} bytes")
-                await execute_pdf_analysis(blob_data, blob.name) if blob_data else None
+                blob_name = blob.name.rsplit(".", 1)[0]
+                await execute_pdf_analysis(blob_data, blob_name)
 
 
 if __name__ == "__main__":
-    import asyncio
-
     asyncio.run(register_listener())

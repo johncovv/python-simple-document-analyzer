@@ -6,12 +6,13 @@ from shared.date_utils import DateUtils
 from core import settings
 
 
-def analyze_pdf_text(full_text: str):
+def process_text_for_insights(full_text: str, prompt_name: str) -> str | None:
     """
-    Analyze text extracted from a PDF document using Azure OpenAI.
+    Analyze text using Azure OpenAI.
 
-    :param full_text: The full text extracted from the PDF.
-    :return: Analysis result as a Markdown-formatted string.
+    :param full_text: The full text.
+    :param prompt_name: The name of the prompt file.
+    :return: Analysis result as a string.
     """
     llm_api_key = settings.azure_openai_api_key
     llm_endpoint = settings.azure_openai_endpoint
@@ -28,13 +29,13 @@ def analyze_pdf_text(full_text: str):
 
     llm_execution_time = DateUtils.get_current_utc_time()
 
-    prompt_file_path = "prompts/content_summary.txt"
+    prompt_file_path = f"prompts/{prompt_name}"
     prompt_template = ""
 
     with open(prompt_file_path, "r", encoding="utf-8") as prompt_file:
         prompt_template = prompt_file.read()
 
-    print("📄 Loaded prompt template from prompts/content_summary.txt")
+    print(f"📄 Loaded prompt template from prompts/{prompt_name}")
 
     messages: Iterable[ChatCompletionMessageParam] = [
         {

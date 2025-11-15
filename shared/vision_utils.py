@@ -5,7 +5,7 @@ from azure.ai.vision.imageanalysis.models import VisualFeatures
 from core import settings
 
 
-def extract_text_from_image_bytes(image_bytes: bytearray):
+def extract_text_from_image_bytes(image_bytes: bytes) -> str:
     """
     Extract text from image bytes using Azure Vision API.
 
