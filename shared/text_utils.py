@@ -7,6 +7,12 @@ from core import settings
 
 
 def analyze_pdf_text(full_text):
+    """
+    Analyze text extracted from a PDF document using Azure OpenAI.
+
+    :param full_text: The full text extracted from the PDF.
+    :return: Analysis result as a Markdown-formatted string.
+    """
     llm_api_key = settings.azure_openai_api_key
     llm_endpoint = settings.azure_openai_endpoint
     llm_deployment_name = settings.azure_openai_deployment_name
@@ -22,6 +28,14 @@ def analyze_pdf_text(full_text):
 
     llm_execution_time = DateUtils.get_current_utc_time()
 
+    prompt_file_path = "prompts/content_summary.txt"
+    prompt_template = ""
+
+    with open(prompt_file_path, "r", encoding="utf-8") as prompt_file:
+        prompt_template = prompt_file.read()
+
+    print("📄 Loaded prompt template from prompts/content_summary.txt")
+
     messages: Iterable[ChatCompletionMessageParam] = [
         {
             "role": "system",
@@ -29,13 +43,7 @@ def analyze_pdf_text(full_text):
         },
         {
             "role": "system",
-            "content": (
-                "Analyze the following text extracted from a PDF document and provide a detailed summary. "
-                "Format your response in Markdown for better readability. Use headers (# ##), "
-                "bold text (**text**), italic (*text*), and bullet points (- item) as needed.\n"
-                "Here is the text:\n\n"
-                f"{full_text}"
-            ),
+            "content": (f"{prompt_template}" "Here is the text:\n\n" f"{full_text}"),
         },
     ]
 

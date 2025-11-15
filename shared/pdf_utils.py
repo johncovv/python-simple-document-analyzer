@@ -36,6 +36,11 @@ def save_markdown_as_pdf(
 ) -> str:
     """
     Convert Markdown to PDF with full formatting using weasyprint
+
+    :param markdown_text: The Markdown text to convert.
+    :param output_path: The output PDF file path.
+    :param config: PdfConfig object with formatting settings. (Optional)
+    :return: The output PDF file path.
     """
     # Convert Markdown to HTML
     html_content = markdown.markdown(markdown_text, extensions=["extra"])

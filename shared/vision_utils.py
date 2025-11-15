@@ -6,6 +6,12 @@ from core import settings
 
 
 def extract_text_from_image_bytes(image_bytes: bytearray):
+    """
+    Extract text from image bytes using Azure Vision API.
+
+    :param image_bytes: Image bytes to process.
+    :return: Extracted text as a string.
+    """
     vision_endpoint = settings.azure_vision_endpoint
     vision_api_key = settings.azure_vision_api_key
 

@@ -5,6 +5,8 @@ from shared.text_utils import analyze_pdf_text
 
 
 async def main():
+    print("🛠️ Starting PDF processing and analysis workflow...")
+
     # PDF Document Conversion
     image_bytes = convert_pdf_pages_to_images_bytes("temp/sample.pdf")
 
