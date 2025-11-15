@@ -41,6 +41,24 @@ cp .env.example .env
 
 4. Configure your Azure credentials in the `.env` file.
 
+## Docker
+
+This application includes a Dockerfile for containerized deployment.
+
+### Running with Docker
+
+1. Build the Docker image:
+
+```bash
+docker build -t document-analyzer .
+```
+
+2. Run the container using your `.env` file:
+
+```bash
+docker run -d --name document-analyzer --env-file .env document-analyzer:latest
+```
+
 ## Usage
 
 1. Start the application:
