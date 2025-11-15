@@ -1,0 +1,19 @@
+[project]
+name = "worker-test"
+version = "0.1.0"
+description = ""
+authors = [{ name = "John Covv", email = "contato@johncovv.com" }]
+readme = "README.md"
+requires-python = "3.13.9"
+dependencies = [
+    "pydantic (>=2.12.4,<3.0.0)",
+    "pydantic-settings (>=2.12.0,<3.0.0)",
+    "openai (>=2.8.0,<3.0.0)",
+    "azure-ai-vision-imageanalysis (>=1.0.0,<2.0.0)",
+    "pymupdf (>=1.26.6,<2.0.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
