@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     # Azure Storage settings
     storage_connection_string: str = ""
     storage_container_name: str = ""
+    storage_blob_to_analyze_prefix: str = "bronze/"
+    storage_blob_analyzed_prefix: str = "silver/"
 
     # Azure OpenAI settings
     azure_openai_api_key: str = ""

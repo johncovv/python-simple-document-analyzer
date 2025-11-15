@@ -1,11 +1,10 @@
-from azure.storage.blob import BlobServiceClient
 import asyncio
 
+from core import storage, settings
 from shared.file_utils import convert_pdf_pages_to_images_bytes
 from shared.vision_utils import extract_text_from_image_bytes
-from shared.pdf_utils import PdfConfig, save_markdown_as_pdf
+from shared.pdf_utils import PdfConfig, convert_markdown_to_pdf
 from shared.text_utils import process_text_for_insights
-from core.settings import settings
 
 
 async def execute_pdf_analysis(blob_bytes: bytes, blob_name: str) -> str | None:
@@ -30,16 +29,18 @@ async def execute_pdf_analysis(blob_bytes: bytes, blob_name: str) -> str | None:
     # Create PDF with results - Convert Markdown to PDF with full formatting
 
     if extracted_insights_as_markdown:
-        analysis_result_path = f"temp/analysis/{blob_name}.pdf"
-
         # Convert markdown to professionally formatted PDF
-        save_markdown_as_pdf(
+        analysis_result_pdf_bytes = convert_markdown_to_pdf(
             extracted_insights_as_markdown,
-            analysis_result_path,
             config=PdfConfig(padding_px=0),
         )
+
+        # Save PDF to Azure Blob Storage
+        analysis_prefix = settings.storage_blob_analyzed_prefix
+        analysis_result_path = f"{analysis_prefix}{blob_name}_analysis.pdf"
+        await storage.upload_blob(analysis_result_path, analysis_result_pdf_bytes)
+
         print(f"📄 PDF created with full formatting: {analysis_result_path}")
-        return analysis_result_path
     else:
         print("❌ No content to save")
         return None
@@ -48,37 +49,36 @@ async def execute_pdf_analysis(blob_bytes: bytes, blob_name: str) -> str | None:
 async def register_listener():
     print("🔔 Registering Azure Blob Storage listener...")
 
-    blob_service_client = BlobServiceClient.from_connection_string(
-        settings.storage_connection_string
-    )
-    container_client = blob_service_client.get_container_client(
-        settings.storage_container_name
-    )
+    file_prefix = settings.storage_blob_to_analyze_prefix
 
     # Snapshot inicial
     current_blobs = []
-    for blob in container_client.list_blobs():
-        current_blobs.append(blob.name)
+    async for blob in await storage.list_blobs(name_starts_with=file_prefix):
+        blob_name = blob.name.rsplit(".", 1)[0]
+        current_blobs.append(blob_name)
 
     print(f"📊 Initial state: {len(current_blobs)} blobs found")
 
     while True:
         await asyncio.sleep(5)  # Check every 5 seconds
 
-        for blob in container_client.list_blobs():
-            if blob.name not in current_blobs:
+        async for blob in await storage.list_blobs(name_starts_with=file_prefix):
+            blob_name = blob.name.rsplit(".", 1)[0]
+
+            if blob_name not in current_blobs:
+
                 print(
-                    f"🆕 New blob detected: {blob.name}, Last modified: {blob.last_modified}"
+                    f"🆕 New blob detected: {blob_name}, Last modified: {blob.last_modified}"
                 )
-                current_blobs.append(blob.name)
+                current_blobs.append(blob_name)
 
-                print(f"📥 Downloading blob: {blob.name}")
-                blob_client = container_client.get_blob_client(blob.name)
-                blob_data = blob_client.download_blob().readall()
+                print(f"📥 Downloading blob: {blob_name}")
+                blob_data = await storage.download_blob(blob.name)
 
-                print(f"⬇️ Blob {blob.name} downloaded, size: {len(blob_data)} bytes")
-                blob_name = blob.name.rsplit(".", 1)[0]
-                await execute_pdf_analysis(blob_data, blob_name)
+                blob_name_without_prefix = blob_name[len(file_prefix) :]
+
+                print(f"⬇️ Blob {blob_name} downloaded, size: {len(blob_data)} bytes")
+                await execute_pdf_analysis(blob_data, blob_name_without_prefix)
 
 
 if __name__ == "__main__":

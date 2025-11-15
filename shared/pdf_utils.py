@@ -1,3 +1,4 @@
+import io
 from weasyprint.text.fonts import FontConfiguration
 from weasyprint import HTML, CSS
 from pydantic import BaseModel
@@ -31,9 +32,9 @@ class PdfConfig(BaseModel):
     page_height_mm: int = 297  # A4 height
 
 
-def save_markdown_as_pdf(
-    markdown_text: str, output_path: str, config: PdfConfig = PdfConfig()
-) -> str:
+def convert_markdown_to_pdf(
+    markdown_text: str, config: PdfConfig = PdfConfig()
+) -> bytes:
     """
     Convert Markdown to PDF with full formatting using weasyprint
 
@@ -172,10 +173,11 @@ def save_markdown_as_pdf(
     font_config = FontConfiguration()
 
     # Create PDF from HTML
+    pdf_bytes = io.BytesIO()
     HTML(string=html_document).write_pdf(
-        output_path,
+        pdf_bytes,
         stylesheets=[css_styles],
         font_config=font_config,
     )
 
-    return output_path
+    return pdf_bytes.getvalue()
